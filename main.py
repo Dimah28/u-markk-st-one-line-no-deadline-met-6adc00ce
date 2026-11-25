@@ -55,14 +55,27 @@ def _validate(text: str) -> None:
         raise ValueError("joke must be one sentence ending with a full stop")
     if not text.strip():
         raise ValueError("joke must not be only whitespace")
+    if any(ord(ch) < 32 or ord(ch) == 127 for ch in text):
+        raise ValueError("joke must not contain control characters")
+
+
+def write_entry(text: str, out_dir: str) -> str:
+    """Validate the entry, then write it to <out_dir>/entry.txt.
+
+    Returns the path written. The file holds exactly the validated
+    text -- no trailing newline, no extra bytes.
+    """
+    _validate(text)
+    os.makedirs(out_dir, exist_ok=True)
+    path = os.path.join(out_dir, "entry.txt")
+    with open(path, "w", encoding="utf-8") as f:
+        f.write(text)
+    return path
 
 
 def main() -> None:
-    _validate(JOKE)
     out_dir = os.environ.get("MAKEFUN_OUTPUT_DIR", "/output")
-    os.makedirs(out_dir, exist_ok=True)
-    with open(os.path.join(out_dir, "entry.txt"), "w", encoding="utf-8") as f:
-        f.write(JOKE)
+    write_entry(JOKE, out_dir)
 
 
 if __name__ == "__main__":
